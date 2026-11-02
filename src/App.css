@@ -1,5 +1,5 @@
 ﻿/* ==========================================================
-   PRIME KUKU - High-End Premium Styles
+   PRIME KUKU - Mobile Friendly & Premium Styles
    ========================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap');
@@ -8,7 +8,7 @@
   --green-900: #0f3d2a;
   --green-800: #14492f;
   --green-700: #1b5e3f;
-  --cream: #f9f6f0; /* Cream safi zaidi */
+  --cream: #f9f6f0;
   --cream-dark: #ece3cc;
   --white: #ffffff;
   --gold: #c9a24a;
@@ -43,7 +43,7 @@ a { color: inherit; }
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
-  padding: 0.8rem 1.6rem; border: none; border-radius: 8px; /* Radi ya kawaida ya kibiashara */
+  padding: 0.8rem 1.6rem; border: none; border-radius: 8px;
   font-size: 0.95rem; font-weight: 600; text-decoration: none; cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -55,8 +55,8 @@ a { color: inherit; }
 .btn-gold { background: var(--gold); color: var(--green-900); }
 .btn-gold:hover { background: #d9b25a; }
 
-.btn-ghost { background: transparent; color: var(--green-900); border: 2px solid var(--green-900); }
-.btn-ghost:hover { background: var(--green-900); color: var(--white); }
+.btn-ghost { background: transparent; color: var(--white); border: 2px solid var(--white); }
+.btn-ghost:hover { background: rgba(255,255,255,0.1); }
 
 .btn-small { padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 6px; }
 .btn-large { padding: 1rem 2rem; font-size: 1.05rem; }
@@ -72,10 +72,6 @@ a { color: inherit; }
 .nav { display: flex; align-items: center; gap: 2rem; }
 .nav a { text-decoration: none; font-weight: 500; color: var(--text); font-size: 0.95rem; transition: color 0.2s; }
 .nav a:hover { color: var(--green-700); }
-
-@media (max-width: 640px) {
-  .nav a:not(.btn) { display: none; }
-}
 
 /* ---------- Hero ---------- */
 .hero {
@@ -143,12 +139,48 @@ a { color: inherit; }
 
 .contact-details p { margin: 0.8rem 0; color: var(--text-muted); font-size: 1.05rem; border-bottom: 1px solid #eee; padding-bottom: 0.8rem; }
 
-@media (max-width: 760px) {
-  .about, .contact { grid-template-columns: 1fr; gap: 2rem; }
-  .hero { padding: 5rem 0 4rem; }
-  .grid { grid-template-columns: 1fr; }
-}
-
 /* ---------- Footer ---------- */
 .site-footer { background: var(--green-900); color: rgba(255, 255, 255, 0.6); padding: 2.5rem 0; border-top: 4px solid var(--gold); }
 .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem; }
+
+/* ==========================================================
+   MOBILE RESPONSIVENESS (Vitu vya Simu)
+   ========================================================== */
+
+@media (max-width: 768px) {
+  /* Header inakuwa ndogo, Nav inarudi katikati */
+  .header-inner { flex-direction: column; height: auto; padding: 1rem 0; gap: 1rem; }
+  .nav { width: 100%; justify-content: space-between; gap: 0.5rem; }
+  .nav a { font-size: 0.85rem; }
+  
+  /* Hero inapungua */
+  .hero { padding: 4rem 0 3rem; text-align: center; }
+  .hero-content { margin: 0 auto; }
+  .hero h1 { font-size: 2rem; }
+  .hero-actions { justify-content: center; flex-direction: column; width: 100%; gap: 0.8rem; }
+  .hero-actions .btn { width: 100%; }
+  .trust { justify-content: center; font-size: 0.8rem; gap: 0.5rem 1rem; }
+
+  /* Sections zinapungua */
+  .section { padding: 3rem 0; }
+  .section-header h2 { font-size: 1.8rem; }
+
+  /* Grid inakuwa column moja */
+  .grid { grid-template-columns: 1fr; gap: 1.5rem; }
+
+  /* Picha inapungua kwenye simu */
+  .card-image-wrap { padding: 1.5rem; }
+  .card-img { height: 180px; }
+
+  /* Options row (Bei na Kitufe) */
+  .option-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .option-row .btn { width: 100%; } /* Kitufe kinajaa upana wote kwa ajili ya kidole */
+
+  /* About na Contact zinakuwa column moja */
+  .about, .contact { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
+  .facts { text-align: left; }
+  .contact-details { text-align: left; }
+  
+  /* Footer */
+  .footer-inner { flex-direction: column; text-align: center; }
+}
