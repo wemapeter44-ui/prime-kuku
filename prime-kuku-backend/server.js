@@ -19,9 +19,9 @@ async function connectDB() {
         console.log("✅ Connected to MongoDB successfully!");
     } catch (error) {
         console.error("❌ MongoDB Connection Failed:", error.message);
+        process.exit(1); // Kama DB imefeli, zima server kabisa
     }
 }
-connectDB();
 
 // 2. Get M-Pesa Token
 const getToken = async () => {
@@ -35,6 +35,11 @@ const getToken = async () => {
 // 3. STK Push Endpoint
 app.post('/api/stkpush', async (req, res) => {
     try {
+        // Hakikisha DB ipo tayari kabla ya kufanya chochote
+        if (!db) {
+            return res.status(500).json({ error: "Database is still connecting. Please try again in a moment." });
+        }
+
         const { phone, amount } = req.body;
         const token = await getToken();
         const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, -3);
@@ -78,13 +83,22 @@ app.post('/api/callback', async (req, res) => {
     const { Body } = req.body;
     if (Body && Body.stkCallback) {
         const { ResultCode, ResultDesc, CheckoutRequestID } = Body.stkCallback;
-        const collection = db.collection('orders');
-        await updateOne(
-            { checkoutRequestID: CheckoutRequestID },
-            { $set: { status: ResultCode === 0 ? 'Success' : 'Failed', resultDesc: ResultDesc } }
-        );
+        
+        // Hakikisha DB ipo
+        if (db) {
+            const collection = db.collection('orders');
+            await collection.updateOne(
+                { checkoutRequestID: CheckoutRequestID },
+                { $set: { status: ResultCode === 0 ? 'Success' : 'Failed', resultDesc: ResultDesc } }
+            );
+        }
     }
     res.json({ ResultCode: 0, ResultDesc: "Success" });
 });
 
-app.listen(process.env.PORT, () => console.log(`🚀 Server running on port ${process.env.PORT}`));
+// 5. Anzisha Server Baada ya DB Kuunganishwa
+connectDB().then(() => {
+    app.listen(process.env.PORT || 5000, () => {
+        console.log(`🚀 Server running on port ${process.env.PORT || 5000}`);
+    });
+});
