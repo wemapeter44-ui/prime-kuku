@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState } from 'react';
 import { products, categories, optionLabel, formatPrice } from './data/products';
 import './App.css';
 
@@ -16,13 +16,11 @@ function orderLink(product, option) {
 export default function App() {
   const [active, setActive] = useState('All');
   
-  // M-Pesa States
   const [showMpesa, setShowMpesa] = useState(false);
-  const [phone, setPhone] = useState('254'); // Inaanza na 254
+  const [phone, setPhone] = useState('254'); 
   const [mpesaAmount, setMpesaAmount] = useState(0);
   const [mpesaLoading, setMpesaLoading] = useState(false);
 
-  // Custom Notification States
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
   const visible = products.filter(
@@ -38,14 +36,13 @@ export default function App() {
     e.preventDefault();
     setMpesaLoading(true);
     
-    // Hakikisha namba inaanza na 254 na ina tarakimu 12
     let formattedPhone = phone.trim();
     if (formattedPhone.startsWith('0')) {
       formattedPhone = '254' + formattedPhone.slice(1);
     }
 
     if (formattedPhone.length !== 12) {
-      showNotify("Please enter a valid Safaricom number (e.g., 254712345678).", "error");
+      showNotify("Please enter a valid Safaricom number.", "error");
       setMpesaLoading(false);
       return;
     }
@@ -60,11 +57,11 @@ export default function App() {
       const data = await res.json();
       
       if (res.ok && data.CheckoutRequestID) {
-        showNotify("Order received! Check your phone to enter your M-Pesa PIN.", "success");
+        showNotify("Payment request sent! Check your phone to enter your M-Pesa PIN.", "success");
         setShowMpesa(false);
         setPhone('254');
       } else {
-        showNotify(data.error || "Something went wrong. Please try again.", "error");
+        showNotify(data.error || "Payment failed. Please try again.", "error");
       }
     } catch (err) {
       showNotify("Network error. Please check your connection.", "error");
@@ -153,6 +150,7 @@ export default function App() {
                           <a className="btn btn-whatsapp btn-small" href={orderLink(p, o)}>
                             WhatsApp
                           </a>
+                          {/* KITUFE KIMEBADILISHWA KUWA 'PAY' */}
                           <button 
                             className="btn btn-mpesa btn-small" 
                             onClick={() => {
@@ -160,7 +158,7 @@ export default function App() {
                               setShowMpesa(true);
                             }}
                           >
-                            M-Pesa
+                            Pay
                           </button>
                         </div>
                       </div>
@@ -217,13 +215,16 @@ export default function App() {
         </div>
       </footer>
 
-      {/* M-PESA MODAL */}
+      {/* M-PESA MODAL (Imepewa muonekano wa kibiashara) */}
       {showMpesa && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3>Pay with M-Pesa</h3>
-            <p style={{ color: 'var(--text-muted)' }}>Amount: <strong style={{ color: 'var(--green-900)', fontSize: '1.2rem' }}>KSh {mpesaAmount}</strong></p>
+            <h3>Checkout</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+              Total Amount: <strong style={{ color: 'var(--green-900)', fontSize: '1.3rem' }}>KSh {mpesaAmount}</strong>
+            </p>
             <form onSubmit={handleMpesa}>
+              <label style={{ display: 'block', textAlign: 'left', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>M-Pesa Phone Number</label>
               <input 
                 type="tel" 
                 placeholder="254712345678" 
@@ -234,17 +235,17 @@ export default function App() {
                 autoFocus
               />
               <button type="submit" className="btn btn-mpesa" style={{ width: '100%', marginBottom: '0.5rem' }} disabled={mpesaLoading}>
-                {mpesaLoading ? 'Sending...' : 'Send STK Push'}
+                {mpesaLoading ? 'Processing...' : 'Pay Now'}
               </button>
               <button type="button" onClick={() => setShowMpesa(false)} className="btn-cancel">
-                Cancel
+                Cancel Order
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* CUSTOM NOTIFICATION TOAST (Inachukua nafasi ya alert) */}
+      {/* NOTIFICATION */}
       {notification.show && (
         <div className={`toast-notification ${notification.type}`}>
           <div className="toast-icon">
