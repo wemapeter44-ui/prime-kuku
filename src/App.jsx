@@ -3,6 +3,8 @@ import { products, categories, optionLabel, formatPrice } from './data/products'
 import './App.css';
 
 const WHATSAPP = import.meta.env.VITE_WHATSAPP_NUMBER || '254712345678'; 
+// Hii ni URL ya backend yako (localhost kwa sasa, baadaye itakuwa ya Render/Vercel)
+const API_URL = 'http://localhost:5000/api/stkpush';
 
 function orderLink(product, option) {
   const size = option?.label ? ` (${option.label})` : '';
@@ -14,9 +16,42 @@ function orderLink(product, option) {
 
 export default function App() {
   const [active, setActive] = useState('All');
+  
+  // M-Pesa States
+  const [showMpesa, setShowMpesa] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [mpesaAmount, setMpesaAmount] = useState(0);
+  const [mpesaLoading, setMpesaLoading] = useState(false);
+
   const visible = products.filter(
     (p) => p.available && (active === 'All' || p.category === active)
   );
+
+  const handleMpesa = async (e) => {
+    e.preventDefault();
+    setMpesaLoading(true);
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, amount: mpesaAmount })
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok && data.CheckoutRequestID) {
+        alert("STK Push imetumwa! Angalia simu yako uweke PIN ya M-Pesa.");
+        setShowMpesa(false);
+        setPhone('');
+      } else {
+        alert("Kosa: " + (data.error || "Imeshindikana kutuma ombi."));
+      }
+    } catch (err) {
+      alert("Network error. Hakikisha backend inatumika.");
+    } finally {
+      setMpesaLoading(false);
+    }
+  };
 
   return (
     <>
@@ -38,7 +73,7 @@ export default function App() {
           <h1>Fresh From Our Farm.<br />Quality On Your Table.</h1>
           <p className="lede">
             Whole farm-raised chickens, properly raised, cleaned and dressed.
-            Order in under a minute on WhatsApp.
+            Order in under a minute via WhatsApp or M-Pesa.
           </p>
           <div className="hero-actions">
             <a className="btn btn-gold btn-large" href="#products">View our chickens</a>
@@ -48,7 +83,7 @@ export default function App() {
             <li>Farm-raised</li>
             <li>Freshly dressed</li>
             <li>Reliable delivery</li>
-            <li>Easy WhatsApp ordering</li>
+            <li>M-Pesa & WhatsApp ordering</li>
           </ul>
         </div>
       </section>
@@ -94,10 +129,20 @@ export default function App() {
                           <span className="option-label">{optionLabel(o)}</span>
                           <span className="price">{formatPrice(o.price)}</span>
                         </div>
-                        <a className="btn btn-whatsapp" href={orderLink(p, o)}>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '6px' }}><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                          Order
-                        </a>
+                        <div className="action-buttons">
+                          <a className="btn btn-whatsapp btn-small" href={orderLink(p, o)}>
+                            WhatsApp
+                          </a>
+                          <button 
+                            className="btn btn-mpesa btn-small" 
+                            onClick={() => {
+                              setMpesaAmount(o.price);
+                              setShowMpesa(true);
+                            }}
+                          >
+                            M-Pesa
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -119,13 +164,13 @@ export default function App() {
             </p>
             <p>
               We keep it simple: whole birds, clear sizes, fair prices, and a WhatsApp
-              order that takes a minute.
+              or M-Pesa order that takes a minute.
             </p>
           </div>
           <div className="facts">
             <div><strong>Whole birds</strong><span>Cleaned & dressed</span></div>
             <div><strong>Farm-raised</strong><span>Raised on our farm</span></div>
-            <div><strong>WhatsApp</strong><span>Order in a minute</span></div>
+            <div><strong>M-Pesa</strong><span>Instant secure payment</span></div>
           </div>
         </div>
       </section>
@@ -151,6 +196,31 @@ export default function App() {
           <span>Fresh From Our Farm. Quality On Your Table.</span>
         </div>
       </footer>
+
+      {showMpesa && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Pay with M-Pesa</h3>
+            <p style={{ color: 'var(--text-muted)' }}>Amount: <strong style={{ color: 'var(--green-900)', fontSize: '1.2rem' }}>KSh {mpesaAmount}</strong></p>
+            <form onSubmit={handleMpesa}>
+              <input 
+                type="tel" 
+                placeholder="Phone number (e.g., 254712345678)" 
+                value={phone} 
+                onChange={(e) => setPhone(e.target.value)} 
+                className="mpesa-input"
+                required
+              />
+              <button type="submit" className="btn btn-mpesa" style={{ width: '100%', marginBottom: '0.5rem' }} disabled={mpesaLoading}>
+                {mpesaLoading ? 'Sending...' : 'Send STK Push'}
+              </button>
+              <button type="button" onClick={() => setShowMpesa(false)} className="btn-cancel">
+                Cancel
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }
