@@ -8,8 +8,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. MongoDB Connection
-const client = new MongoClient(process.env.MONGODB_URI);
+// 1. MongoDB Connection with TLS fix for Render
+const client = new MongoClient(process.env.MONGODB_URI, {
+    tls: true,
+    tlsAllowInvalidCertificates: true // Inasaidia Render kuepuka SSL errors wakati wa majaribio
+});
 let db;
 
 async function connectDB() {
@@ -19,7 +22,7 @@ async function connectDB() {
         console.log("✅ Connected to MongoDB successfully!");
     } catch (error) {
         console.error("❌ MongoDB Connection Failed:", error.message);
-        process.exit(1); // Kama DB imefeli, zima server kabisa
+        process.exit(1);
     }
 }
 
@@ -35,9 +38,8 @@ const getToken = async () => {
 // 3. STK Push Endpoint
 app.post('/api/stkpush', async (req, res) => {
     try {
-        // Hakikisha DB ipo tayari kabla ya kufanya chochote
         if (!db) {
-            return res.status(500).json({ error: "Database is still connecting. Please try again in a moment." });
+            return res.status(500).json({ error: "Database is still connecting. Please try again." });
         }
 
         const { phone, amount } = req.body;
@@ -61,7 +63,6 @@ app.post('/api/stkpush', async (req, res) => {
             headers: { Authorization: `Bearer ${token}` }
         });
 
-        // Hifadhi kwenye MongoDB
         const collection = db.collection('orders');
         await collection.insertOne({
             phone,
@@ -84,7 +85,6 @@ app.post('/api/callback', async (req, res) => {
     if (Body && Body.stkCallback) {
         const { ResultCode, ResultDesc, CheckoutRequestID } = Body.stkCallback;
         
-        // Hakikisha DB ipo
         if (db) {
             const collection = db.collection('orders');
             await collection.updateOne(
@@ -96,7 +96,7 @@ app.post('/api/callback', async (req, res) => {
     res.json({ ResultCode: 0, ResultDesc: "Success" });
 });
 
-// 5. Anzisha Server Baada ya DB Kuunganishwa
+// 5. Start Server
 connectDB().then(() => {
     app.listen(process.env.PORT || 5000, () => {
         console.log(`🚀 Server running on port ${process.env.PORT || 5000}`);
