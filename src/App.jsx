@@ -1,10 +1,9 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { products, categories, optionLabel, formatPrice } from './data/products';
 import './App.css';
 
 const WHATSAPP = import.meta.env.VITE_WHATSAPP_NUMBER || '254712345678'; 
-// Hii ni URL ya backend yako (localhost kwa sasa, baadaye itakuwa ya Render/Vercel)
-const API_URL = 'http://localhost:5000/api/stkpush';
+const API_URL = 'https://prime-kuku.onrender.com/api/stkpush';
 
 function orderLink(product, option) {
   const size = option?.label ? ` (${option.label})` : '';
@@ -19,35 +18,56 @@ export default function App() {
   
   // M-Pesa States
   const [showMpesa, setShowMpesa] = useState(false);
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState('254'); // Inaanza na 254
   const [mpesaAmount, setMpesaAmount] = useState(0);
   const [mpesaLoading, setMpesaLoading] = useState(false);
+
+  // Custom Notification States
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
   const visible = products.filter(
     (p) => p.available && (active === 'All' || p.category === active)
   );
 
+  const showNotify = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 5000);
+  };
+
   const handleMpesa = async (e) => {
     e.preventDefault();
     setMpesaLoading(true);
+    
+    // Hakikisha namba inaanza na 254 na ina tarakimu 12
+    let formattedPhone = phone.trim();
+    if (formattedPhone.startsWith('0')) {
+      formattedPhone = '254' + formattedPhone.slice(1);
+    }
+
+    if (formattedPhone.length !== 12) {
+      showNotify("Please enter a valid Safaricom number (e.g., 254712345678).", "error");
+      setMpesaLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, amount: mpesaAmount })
+        body: JSON.stringify({ phone: formattedPhone, amount: mpesaAmount })
       });
       
       const data = await res.json();
       
       if (res.ok && data.CheckoutRequestID) {
-        alert("STK Push imetumwa! Angalia simu yako uweke PIN ya M-Pesa.");
+        showNotify("Order received! Check your phone to enter your M-Pesa PIN.", "success");
         setShowMpesa(false);
-        setPhone('');
+        setPhone('254');
       } else {
-        alert("Kosa: " + (data.error || "Imeshindikana kutuma ombi."));
+        showNotify(data.error || "Something went wrong. Please try again.", "error");
       }
     } catch (err) {
-      alert("Network error. Hakikisha backend inatumika.");
+      showNotify("Network error. Please check your connection.", "error");
     } finally {
       setMpesaLoading(false);
     }
@@ -197,6 +217,7 @@ export default function App() {
         </div>
       </footer>
 
+      {/* M-PESA MODAL */}
       {showMpesa && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -205,11 +226,12 @@ export default function App() {
             <form onSubmit={handleMpesa}>
               <input 
                 type="tel" 
-                placeholder="Phone number (e.g., 254712345678)" 
+                placeholder="254712345678" 
                 value={phone} 
                 onChange={(e) => setPhone(e.target.value)} 
                 className="mpesa-input"
                 required
+                autoFocus
               />
               <button type="submit" className="btn btn-mpesa" style={{ width: '100%', marginBottom: '0.5rem' }} disabled={mpesaLoading}>
                 {mpesaLoading ? 'Sending...' : 'Send STK Push'}
@@ -219,6 +241,16 @@ export default function App() {
               </button>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* CUSTOM NOTIFICATION TOAST (Inachukua nafasi ya alert) */}
+      {notification.show && (
+        <div className={`toast-notification ${notification.type}`}>
+          <div className="toast-icon">
+            {notification.type === 'success' ? '✓' : '✕'}
+          </div>
+          <div className="toast-message">{notification.message}</div>
         </div>
       )}
     </>
