@@ -16,11 +16,14 @@ function orderLink(product, option) {
 export default function App() {
   const [active, setActive] = useState('All');
   
+  // M-Pesa States
   const [showMpesa, setShowMpesa] = useState(false);
   const [phone, setPhone] = useState('254'); 
   const [mpesaAmount, setMpesaAmount] = useState(0);
   const [mpesaLoading, setMpesaLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
+  // Notification State
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
   const visible = products.filter(
@@ -57,8 +60,8 @@ export default function App() {
       const data = await res.json();
       
       if (res.ok && data.CheckoutRequestID) {
-        showNotify("Payment request sent! Check your phone to enter your M-Pesa PIN.", "success");
         setShowMpesa(false);
+        setShowSuccess(true); // Fungua Modal ya Mafanikio
         setPhone('254');
       } else {
         showNotify(data.error || "Payment failed. Please try again.", "error");
@@ -150,7 +153,6 @@ export default function App() {
                           <a className="btn btn-whatsapp btn-small" href={orderLink(p, o)}>
                             WhatsApp
                           </a>
-                          {/* KITUFE KIMEBADILISHWA KUWA 'PAY' */}
                           <button 
                             className="btn btn-mpesa btn-small" 
                             onClick={() => {
@@ -163,6 +165,10 @@ export default function App() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                  {/* Secure Payment Badge */}
+                  <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+                    <span>🔒</span> Secure Payment via M-Pesa
                   </div>
                 </div>
               </article>
@@ -215,7 +221,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* M-PESA MODAL (Imepewa muonekano wa kibiashara) */}
+      {/* M-PESA CHECKOUT MODAL */}
       {showMpesa && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -245,7 +251,23 @@ export default function App() {
         </div>
       )}
 
-      {/* NOTIFICATION */}
+      {/* SUCCESS MODAL */}
+      {showSuccess && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
+            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>✅</div>
+            <h3 style={{ fontSize: '1.8rem', marginBottom: '1rem' }}>Order Placed!</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '1.1rem' }}>
+              We've sent a payment request to your phone. Please enter your M-Pesa PIN to complete the order.
+            </p>
+            <button className="btn btn-whatsapp" style={{ width: '100%' }} onClick={() => setShowSuccess(false)}>
+              Back to Shop
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* TOAST NOTIFICATION */}
       {notification.show && (
         <div className={`toast-notification ${notification.type}`}>
           <div className="toast-icon">
